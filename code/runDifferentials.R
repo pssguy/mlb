@@ -1,7 +1,4 @@
 
-
-
-
 theData <- reactive({
   if (is.null(input$franchise))
     return()

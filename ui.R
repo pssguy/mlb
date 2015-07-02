@@ -1,12 +1,14 @@
 
 
-dashboardPage(
+dashboardPage(skin="yellow",
   dashboardHeader(title = "MLB"),
   
   dashboardSidebar(
+    includeCSS("custom.css"),
+    inputPanel(
     sliderInput(
       "year","Select Season", min = 1901,max = 2015,value = 2015,sep = ""
-    ),
+    )),
     uiOutput("a"),
     
     sidebarMenu(
@@ -22,6 +24,7 @@ dashboardPage(
       
       menuItem(
         "Other Dashboards",
+      
         menuSubItem("Fortune 500",href = "https://mytinyshinys.shinyapps.io/fortune500"),
         menuSubItem("WikiGuardian",href = "https://mytinyshinys.shinyapps.io/wikiGuardian"),
         menuSubItem("World Soccer",href = "https://mytinyshinys.shinyapps.io/worldSoccer")
