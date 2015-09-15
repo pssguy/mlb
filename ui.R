@@ -5,17 +5,20 @@ dashboardPage(skin="yellow",
   
   dashboardSidebar(
     includeCSS("custom.css"),
-    inputPanel(
-    sliderInput(
-      "year","Select Season", min = 1901,max = 2015,value = 2015,sep = ""
-    )),
-    uiOutput("a"),
+#     inputPanel(
+#     sliderInput(
+#       "year","Select Season", min = 1901,max = 2015,value = 2015,sep = ""
+#     )),
+#     uiOutput("a"),
     
     sidebarMenu(
       menuItem(
         "Run Differential", tabName = "RD",icon = icon("area-chart")
       ),
-      
+      menuItem(
+        "Awards",
+        menuSubItem("Head To Head", tabName = "matchup")
+      ),
       
       menuItem("Info", tabName = "info",icon = icon("info")),
       
@@ -24,8 +27,11 @@ dashboardPage(skin="yellow",
       
       menuItem(
         "Other Dashboards",
-      
-        menuSubItem("Fortune 500",href = "https://mytinyshinys.shinyapps.io/fortune500"),
+        menuSubItem("Climate",href = "https://mytinyshinys.shinyapps.io/climate"),
+        menuSubItem("Cricket",href = "https://mytinyshinys.shinyapps.io/cricket"),
+        menuSubItem("MainlyMaps",href = "https://mytinyshinys.shinyapps.io/mainlyMaps"), 
+       
+       
         menuSubItem("WikiGuardian",href = "https://mytinyshinys.shinyapps.io/wikiGuardian"),
         menuSubItem("World Soccer",href = "https://mytinyshinys.shinyapps.io/worldSoccer")
         
@@ -47,6 +53,17 @@ dashboardPage(skin="yellow",
       box(
         status = "success", solidHeader = TRUE,
         title = "Run Differential",
+#         inputPanel(
+#           sliderInput(
+#             "year",NULL, min = 1901,max = 2015,value = 2015,sep = ""
+#           )),
+#         uiOutput("a"),
+div(style = "display:inline-block",sliderInput(
+               "year",NULL, min = 1901,max = 2015,value = 2015,
+               sep = "",width='300px'
+             )),
+div(style = "display:inline-block;",uiOutput("a")),
+
         plotOutput("plot_RD")
         
       )

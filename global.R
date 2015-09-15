@@ -12,4 +12,9 @@ library(markdown)
 
 # load requisite files
 
+## rundifferentials
 teamYears <- read_csv("teamIDyears.csv")
+
+## awards
+
+mvpVotes <- read_csv("MVPvoting.csv")

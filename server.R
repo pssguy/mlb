@@ -6,13 +6,14 @@ shinyServer(function(input, output,session) {
   
     teams <- sort(teamYears[teamYears$years == input$year,]$teamID)
     
-    inputPanel(
-    selectInput("franchise","Select Franchise",teams)
-    )
+   
+    selectInput("franchise","Select Franchise",teams, width='120px')
+    
   })
   
   
   source("code/runDifferentials.R", local = TRUE)
+  source("code/awards.R", local = TRUE)
   
   
   
