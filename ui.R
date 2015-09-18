@@ -17,7 +17,7 @@ dashboardPage(skin="yellow",
       ),
       menuItem(
         "Awards",
-        menuSubItem("Head To Head", tabName = "matchup")
+        menuSubItem("MVP", tabName = "mvp", selected = T)
       ),
       
       menuItem("Info", tabName = "info",icon = icon("info")),
@@ -69,7 +69,22 @@ div(style = "display:inline-block;",uiOutput("a")),
       )
       
     ),
-    
+   
+tabItem(
+  "mvp",
+  box(width=8,
+    status = "success", solidHeader = TRUE,
+    title = "MVP winners compared with Top WAR Ranked (click point for details)",
+    radioButtons("mvpChoice",NULL,choices=c("Rank","Value"),inline=T),
+  ggvisOutput("rankWAR")
+  ),
+  box(width=4,
+      status = "success", solidHeader = TRUE,
+      title = "Summary",
+     
+     DT::dataTableOutput("table")
+  )
+),
     
     
     tabItem("info",includeMarkdown("info.md"))

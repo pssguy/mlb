@@ -9,6 +9,7 @@ library(ggplot2)
 library(XML)
 library(stringr)
 library(markdown)
+library(ggvis)
 
 # load requisite files
 
@@ -16,5 +17,7 @@ library(markdown)
 teamYears <- read_csv("teamIDyears.csv")
 
 ## awards
-
+## data can be found https://github.com/pssguy/mlb/blob/master/MVPvoting.csv
 mvpVotes <- read_csv("MVPvoting.csv")
+
+print(glimpse(mvpVotes))
