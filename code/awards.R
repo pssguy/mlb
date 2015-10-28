@@ -21,7 +21,7 @@ getSeason = function(data,location,session){
       DT::datatable(class='compact stripe hover row-border order-column',rownames=TRUE,options= list(paging = TRUE, searching = FALSE,info=FALSE))
     
   })
-
+}
 
 ## initial graph
 
@@ -70,4 +70,5 @@ df %>%
       bind_shiny("rankWAR")
     
   }
+  
 })

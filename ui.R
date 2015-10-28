@@ -5,11 +5,7 @@ dashboardPage(skin="yellow",
   
   dashboardSidebar(
     includeCSS("custom.css"),
-#     inputPanel(
-#     sliderInput(
-#       "year","Select Season", min = 1901,max = 2015,value = 2015,sep = ""
-#     )),
-#     uiOutput("a"),
+
     
     sidebarMenu(
       menuItem(
@@ -17,7 +13,7 @@ dashboardPage(skin="yellow",
       ),
       menuItem(
         "Awards",
-        menuSubItem("MVP", tabName = "mvp", selected = T)
+        menuSubItem("MVP", tabName = "mvp")
       ),
       
       menuItem("Info", tabName = "info",icon = icon("info")),
@@ -25,23 +21,16 @@ dashboardPage(skin="yellow",
       menuItem("Code",icon = icon("code-fork"),
                href = "https://github.com/pssguy/mlb"),
       
-      menuItem(
-        "Other Dashboards",
-        menuSubItem("Climate",href = "https://mytinyshinys.shinyapps.io/climate"),
-        menuSubItem("Cricket",href = "https://mytinyshinys.shinyapps.io/cricket"),
-        menuSubItem("MainlyMaps",href = "https://mytinyshinys.shinyapps.io/mainlyMaps"), 
-       
-       
-        menuSubItem("WikiGuardian",href = "https://mytinyshinys.shinyapps.io/wikiGuardian"),
-        menuSubItem("World Soccer",href = "https://mytinyshinys.shinyapps.io/worldSoccer")
-        
-      ),
+      tags$hr(),
+      menuItem(text="",href="https://mytinyshinys.shinyapps.io/dashboard",badgeLabel = "All Dashboards and Trelliscopes (14)"),
+      tags$hr(),
       
-      menuItem("", icon = icon("twitter-square"),
-               href = "https://twitter.com/pssGuy"),
-      
-      menuItem("", icon = icon("envelope"),
-               href = "mailto:agcur@rogers.com")
+      tags$body(
+        a(class="addpad",href="https://twitter.com/pssGuy", target="_blank",img(src="images/twitterImage25pc.jpg")),
+        a(class="addpad2",href="mailto:agcur@rogers.com", img(src="images/email25pc.jpg")),
+        a(class="addpad2",href="https://github.com/pssguy",target="_blank",img(src="images/GitHub-Mark30px.png")),
+        a(href="https://rpubs.com/pssguy",target="_blank",img(src="images/RPubs25px.png"))
+      )
     )
   ),
   
@@ -50,21 +39,18 @@ dashboardPage(skin="yellow",
       "RD",
       
       
-      box(
+      box(width=4,
         status = "success", solidHeader = TRUE,
         title = "Run Differential",
-#         inputPanel(
-#           sliderInput(
-#             "year",NULL, min = 1901,max = 2015,value = 2015,sep = ""
-#           )),
-#         uiOutput("a"),
-div(style = "display:inline-block",sliderInput(
-               "year",NULL, min = 1901,max = 2015,value = 2015,
-               sep = "",width='300px'
-             )),
-div(style = "display:inline-block;",uiOutput("a")),
 
-        plotOutput("plot_RD")
+inputPanel(
+sliderInput("year",NULL, min = 1901,max = 2015,value = 2015,
+                 sep = "",width='300px'
+               ),
+uiOutput("a"),
+actionButton("rdButton","Get Chart")
+),
+        dimpleOutput("plot_RD")
         
       )
       

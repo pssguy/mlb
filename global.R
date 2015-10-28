@@ -10,6 +10,7 @@ library(XML)
 library(stringr)
 library(markdown)
 library(ggvis)
+library(rcdimple)
 
 # load requisite files
 
@@ -20,4 +21,4 @@ teamYears <- read_csv("teamIDyears.csv")
 ## data can be found https://github.com/pssguy/mlb/blob/master/MVPvoting.csv
 mvpVotes <- read_csv("MVPvoting.csv")
 
-print(glimpse(mvpVotes))
+#print(glimpse(mvpVotes))
