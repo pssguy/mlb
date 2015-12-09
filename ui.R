@@ -9,6 +9,9 @@ dashboardPage(skin="yellow",
     
     sidebarMenu(
       menuItem(
+        "Division Races", tabName = "divRaces",icon = icon("line-chart"), selected=T
+      ),
+      menuItem(
         "Run Differential", tabName = "RD",icon = icon("area-chart")
       ),
       menuItem(
@@ -71,6 +74,18 @@ tabItem(
      DT::dataTableOutput("table")
   )
 ),
+
+tabItem("divRaces",
+        box(
+          status = "success", solidHeader = TRUE,
+          title = "Divison Races - Hover for game details Zoom and other options available",
+          radioButtons("race_lg",NULL,c("AL","NL"), inline=T),
+          radioButtons("race_div",NULL,c("East","West","Central"),inline=T),
+          h5("N.B.Central Division from 1994 on"),
+          sliderInput("race_yr","Year",value=2015,min=1969,max=2015,sep=""),
+         
+          plotlyOutput("divRace")
+        )),
     
     
     tabItem("info",includeMarkdown("info.md"))
