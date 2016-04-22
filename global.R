@@ -1,7 +1,7 @@
 # load libraries
-# need for .function and has to be loaded before dplyr
-library(plyr)
-library(dplyr)
+# need for .function and has to be loaded before dplyr (look at whether still necessary)
+library(plyr) 
+
 library(readr)
 library(shiny)
 library(shinydashboard)
@@ -11,6 +11,8 @@ library(stringr)
 library(markdown)
 library(ggvis)
 library(rcdimple)
+library(plotly)
+library(dplyr) # looks like another package might include plyr so moved to bottom
 
 # load requisite files
 
@@ -22,3 +24,8 @@ teamYears <- read_csv("teamIDyears.csv")
 mvpVotes <- read_csv("MVPvoting.csv")
 
 #print(glimpse(mvpVotes))
+
+#divRaces <- read_csv("finalRaw1969toDate.csv")
+#divRaces <- read_csv("finalRaw19692015.csv")
+
+divRaces <- read_csv("allRes1969toDate.csv")

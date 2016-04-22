@@ -47,7 +47,7 @@ dashboardPage(skin="yellow",
         title = "Run Differential",
 
 inputPanel(
-sliderInput("year",NULL, min = 1901,max = 2015,value = 2015,
+sliderInput("year",NULL, min = 1901,max = 2016,value = 2016,
                  sep = "",width='300px'
                ),
 uiOutput("a"),
@@ -82,7 +82,7 @@ tabItem("divRaces",
           radioButtons("race_lg",NULL,c("AL","NL"), inline=T),
           radioButtons("race_div",NULL,c("East","West","Central"),inline=T),
           h5("N.B.Central Division from 1994 on"),
-          sliderInput("race_yr","Year",value=2015,min=1969,max=2015,sep=""),
+          sliderInput("race_yr","Year",value=2016,min=1969,max=2016,sep=""),
          
           plotlyOutput("divRace")
         )),

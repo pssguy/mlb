@@ -6,7 +6,7 @@ theData <- eventReactive(input$rdButton,{
   print(input$franchise)
   
   # create page for scraping
- chosenURL<- "http://www.baseball-reference.com/teams/TOR/2015-schedule-scores.shtml"
+ #chosenURL<- "http://www.baseball-reference.com/teams/TOR/2016-schedule-scores.shtml"
   chosenURL <-
     paste0(
       "http://www.baseball-reference.com/teams/",input$franchise,"/",input$year,"-schedule-scores.shtml"
