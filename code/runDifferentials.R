@@ -1,9 +1,13 @@
 
 theData <- eventReactive(input$rdButton,{
-  if (is.null(input$franchise))
-    return()
+  # if (is.null(input$franchise))
+  #   return()
   
-  print(input$franchise)
+  
+  req(input$franchise)
+  req(input$year)
+  # print(input$franchise)
+  # print(input$year)
   
   # create page for scraping
  #chosenURL<- "http://www.baseball-reference.com/teams/TOR/2016-schedule-scores.shtml"
@@ -50,13 +54,13 @@ theData <- eventReactive(input$rdButton,{
 })
 
 output$plot_RD <- renderDimple({
-  if (is.null(theData()))
-    return()
+  # if (is.null(theData()))
+  #   return()
   
   # easier for comprehension though not needed
   matchDf <- theData()$matchDf
   df <- theData()$df
-  write_csv(df,"df.csv")
+ # write_csv(df,"df.csv")
   # summarize data by run differential
   py <- df %>%
     group_by(Result,RD) %>%
@@ -66,7 +70,7 @@ output$plot_RD <- renderDimple({
   print("py")
   print(glimpse(py))
   
-  write_csv(py,"probs.csv")
+  #write_csv(py,"probs.csv")
  # py[is.na(py$n),]$n <- 0
   #Error : Unknown parameters: subset
   
@@ -86,6 +90,7 @@ output$plot_RD <- renderDimple({
   theMax <- max(py$n)
   theMin <- min(py$n)
   print(theMax)
+  print(theMin)
   
   # create rcdimple chart
   py %>%

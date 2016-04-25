@@ -12,6 +12,7 @@ library(markdown)
 library(ggvis)
 library(rcdimple)
 library(plotly)
+library(explodingboxplotR)
 library(dplyr) # looks like another package might include plyr so moved to bottom
 
 # load requisite files

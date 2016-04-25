@@ -7,17 +7,19 @@ dashboardPage(skin="yellow",
     includeCSS("custom.css"),
 
     
-    sidebarMenu(
+    sidebarMenu(menuItem(
+      "Awards",
+      menuSubItem("MVP", tabName = "mvp")
+    ),
       menuItem(
-        "Division Races", tabName = "divRaces",icon = icon("line-chart"), selected=T
+        "Division Races", tabName = "divRaces",icon = icon("line-chart")
       ),
       menuItem(
         "Run Differential", tabName = "RD",icon = icon("area-chart")
       ),
-      menuItem(
-        "Awards",
-        menuSubItem("MVP", tabName = "mvp")
-      ),
+    menuItem(
+      "Starters WAR by Team", tabName = "pitcherWAR", selected=T
+    ),
       
       menuItem("Info", tabName = "info",icon = icon("info")),
       
@@ -86,6 +88,19 @@ tabItem("divRaces",
          
           plotlyOutput("divRace")
         )),
+
+tabItem("pitcherWAR",
+        box( width=12,
+          status = "success", solidHeader = TRUE,
+          title = "Starting Pitcher's WAR by year - click plot for individuals",
+          # radioButtons("race_lg",NULL,c("AL","NL"), inline=T),
+          # radioButtons("race_div",NULL,c("East","West","Central"),inline=T),
+          # h5("N.B.Central Division from 1994 on"),
+          sliderInput("min_Inns","Minimum Innings pitched",value=70,min=0,max=700,sep="", step=10),
+          sliderInput("pitcherWAR_yr","Year",value=2015,min=1871,max=2016,sep=""),
+          actionButton("spb_go","Go"),
+          exploding_boxplotOutput("startersWARplot")
+        ),width="10%"),  # width value seems to have no impact
     
     
     tabItem("info",includeMarkdown("info.md"))
