@@ -1,6 +1,6 @@
 
 
-dashboardPage(skin="yellow",
+dashboardPage(skin="yellow", title = "MLB",
   dashboardHeader(title = "MLB"),
   
   dashboardSidebar(

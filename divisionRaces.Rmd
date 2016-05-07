@@ -1,0 +1,211 @@
+---
+title: "MLB Division Races 1994-2016 (Hover Lines for Details - Zoom as required)"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+runtime: shiny
+---
+
+
+
+
+```{r setup, include=FALSE}
+# Load packages and initialize data here
+library(flexdashboard)
+library(shiny)
+library(plotly)
+library(readr)
+library(dplyr)
+
+divRaces <- readRDS("allRes1969toDate.rds")
+```
+
+Row {data-height=150}
+-----------------------------------------------------------------------
+
+```{r}
+ inputPanel(sliderInput("race_yr","Enter year of choice",value=2016,min=1994,max=2016,sep=""),
+            actionButton("go","Display Charts"))
+```
+
+Row
+-----------------------------------------------------------------------
+
+### AL East
+
+```{r}
+ALE <- eventReactive(input$go,{
+  final_sel <- divRaces %>% 
+    filter(league=="AL"&divison=="East"&season==input$race_yr)
+})
+
+  
+  output$ALE_race <- renderPlotly({
+  plot_ly(ALE(), x = gameOrder, y = diff, mode = "lines", hoverinfo = "text",color=Team,
+          text = paste(Team,
+                       "<br>",Date,
+                       "<br> v ",Opp," "," ",R,"-",RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("ALE_race")
+```
+
+### AL Central
+
+```{r}
+ALC <- eventReactive(input$go,{
+  final_sel <- divRaces %>% 
+    filter(league=="AL"&divison=="Central"&season==input$race_yr)
+})
+
+  
+  output$ALC_race <- renderPlotly({
+  plot_ly(ALC(), x = gameOrder, y = diff, mode = "lines", hoverinfo = "text",color=Team,
+          text = paste(Team,
+                       "<br>",Date,
+                       "<br> v ",Opp," "," ",R,"-",RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("ALC_race")
+   
+```
+
+### AL West
+
+```{r}
+ALW <- eventReactive(input$go,{
+  final_sel <- divRaces %>% 
+    filter(league=="AL"&divison=="West"&season==input$race_yr)
+})
+
+  
+  output$ALW_race <- renderPlotly({
+  plot_ly(ALW(), x = gameOrder, y = diff, mode = "lines", hoverinfo = "text",color=Team,
+          text = paste(Team,
+                       "<br>",Date,
+                       "<br> v ",Opp," "," ",R,"-",RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("ALW_race")
+```
+
+Row
+-----------------------------------------------------------------------
+
+### NL East
+
+```{r }
+NLE <- eventReactive(input$go,{
+  final_sel <- divRaces %>% 
+    filter(league=="NL"&divison=="East"&season==input$race_yr)
+})
+
+  
+  output$NLE_race <- renderPlotly({
+  plot_ly(NLE(), x = gameOrder, y = diff, mode = "lines", hoverinfo = "text",color=Team,
+          text = paste(Team,
+                       "<br>",Date,
+                       "<br> v ",Opp," "," ",R,"-",RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("NLE_race")
+```
+
+### NL Central
+
+```{r}
+NLC <- eventReactive(input$go,{
+  final_sel <- divRaces %>% 
+    filter(league=="NL"&divison=="Central"&season==input$race_yr)
+})
+
+  
+  output$NLC_race <- renderPlotly({
+  plot_ly(NLC(), x = gameOrder, y = diff, mode = "lines", hoverinfo = "text",color=Team,
+          text = paste(Team,
+                       "<br>",Date,
+                       "<br> v ",Opp," "," ",R,"-",RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("NLC_race")
+```
+
+### NL West
+
+```{r}
+NLW <- eventReactive(input$go,{
+  final_sel <- divRaces %>% 
+    filter(league=="NL"&divison=="West"&season==input$race_yr)
+})
+
+  
+  output$NLW_race <- renderPlotly({
+  plot_ly(NLW(), x = gameOrder, y = diff, mode = "lines", hoverinfo = "text",color=Team,
+          text = paste(Team,
+                       "<br>",Date,
+                       "<br> v ",Opp," "," ",R,"-",RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("NLW_race")
+    
+```
