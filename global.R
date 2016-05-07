@@ -24,9 +24,6 @@ teamYears <- read_csv("teamIDyears.csv")
 ## data can be found https://github.com/pssguy/mlb/blob/master/MVPvoting.csv
 mvpVotes <- read_csv("MVPvoting.csv")
 
-#print(glimpse(mvpVotes))
 
-#divRaces <- read_csv("finalRaw1969toDate.csv")
-#divRaces <- read_csv("finalRaw19692015.csv")
 
-divRaces <- read_csv("allRes1969toDate.csv")
+divRaces <- readRDS("allRes1969toDate.rds")
