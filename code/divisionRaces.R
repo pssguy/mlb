@@ -1,7 +1,4 @@
 
-
-
-
 output$divRace <- renderPlotly({
   if (input$race_div == "Central" & input$race_yr <= 1993)
     return()

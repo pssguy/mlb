@@ -1,8 +1,10 @@
 ---
-title: "MLB Division Races (Hover Lines for Details - Zoom as required)"
+title: "MLB"
+author: "pssguy"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
+    social: [ menu ]
     source_code: embed
 runtime: shiny
 ---
@@ -16,12 +18,22 @@ library(flexdashboard)
 library(shiny)
 library(plotly)
 library(readr)
+library(Lahman)
+
 library(dplyr)
 
 divRaces <- readRDS("allRes1969toDate.rds")
+
+# create data for selectInput (all players - may need to switch later)
+players <- Master %>% 
+  mutate(lastYear=ifelse(is.na(deathYear)," ",deathYear))
+
+bbRef <- players$bbrefID
+
+names(bbRef) <- paste0(players$nameFirst," ", players$nameLast," (",players$birthYear,"-",players$lastYear,")")
 ```
 
-1994-2016
+1994-2016 {data-navmenu="Division Races"}
 ===================================== 
 
 Row {data-height=150}
@@ -37,7 +49,7 @@ Row {data-height=150}
 Row
 -----------------------------------------------------------------------
 
-### AL East
+### AL East (Hover Lines for Details - Zoom as required)
 
 ```{r}
 ALE <- eventReactive(input$go,{
@@ -216,7 +228,7 @@ NLW <- eventReactive(input$go,{
     
 ```
 
-1969-1993
+1969-1993 {data-navmenu="Division Races"}
 ===================================== 
 
 Row {data-height=150}
@@ -354,4 +366,15 @@ NLW2 <- eventReactive(input$go2,{
   
   plotlyOutput("NLW2_race")
     
+```
+
+Pitcher Game Logs
+===================================== 
+
+Row {data-height=150}
+-----------------------------------------------------------------------
+
+```{r}
+ inputPanel(selectInput("log_Pitcher","Select or type Name",bbRef),
+            actionButton("go3","Display Charts  (wait for it)"))
 ```
