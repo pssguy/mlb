@@ -19,18 +19,25 @@ library(shiny)
 library(plotly)
 library(readr)
 library(Lahman)
+library(XML)
 
 library(dplyr)
 
 divRaces <- readRDS("allRes1969toDate.rds")
 
-# create data for selectInput (all players - may need to switch later)
-players <- Master %>% 
-  mutate(lastYear=ifelse(is.na(deathYear)," ",deathYear))
+# create data for pitcher selectInput 
+pitchers <- Master %>% 
+  mutate(lastYear=ifelse(is.na(deathYear)," ",deathYear)) %>% 
+          right_join(Pitching) %>% 
+           select(nameFirst,nameLast,birthYear,lastYear,bbrefID,playerID) %>% 
+           unique() %>% 
+            arrange(bbrefID)
 
-bbRef <- players$bbrefID
+bbRef_pitchers <- pitchers$playerID
 
-names(bbRef) <- paste0(players$nameFirst," ", players$nameLast," (",players$birthYear,"-",players$lastYear,")")
+names(bbRef_pitchers) <- paste0(pitchers$nameFirst," ", pitchers$nameLast," (",pitchers$birthYear,"-",pitchers$lastYear,")")
+
+
 ```
 
 1994-2016 {data-navmenu="Division Races"}
@@ -371,10 +378,111 @@ NLW2 <- eventReactive(input$go2,{
 Pitcher Game Logs
 ===================================== 
 
-Row {data-height=150}
+Row {data-height=80}
 -----------------------------------------------------------------------
 
 ```{r}
- inputPanel(selectInput("log_Pitcher","Select or type Name",bbRef),
+ inputPanel(selectInput("log_Pitcher","Select or type Name",bbRef_pitchers),
             actionButton("go3","Display Charts  (wait for it)"))
+
+pgl <- eventReactive(input$go3,{
+  
+ print(input$log_Pitcher)
+  print(glimpse(pitchers))
+  
+bbrefID <-pitchers %>% 
+  filter(playerID==input$log_Pitcher) %>% 
+  .$bbrefID
+
+yrs <-Pitching %>% 
+  filter(playerID==input$log_Pitcher)
+
+minYr <- min(yrs$yearID)
+
+## take account of Lahman db being up to 2014 only
+maxYr <- ifelse(max(yrs$yearID)==2014,2016,max(yrs$yearID))
+
+career <- minYr:maxYr
+
+for (i in 1:length(career)) {
+url <- paste0("http://www.baseball-reference.com/players/gl.cgi?id=",bbrefID,"&t=p&year=",career[i])
+# url <- "http://www.baseball-reference.com/players/gl.cgi?id=priceda01&t=p&year=2016"
+tables <- readHTMLTable(url, stringsAsFactors=FALSE)
+tempdata <- tables[["pitching_gamelogs"]]
+
+if(career[i]>=2013) {
+  print(career[i])
+  tempdata <- tempdata %>% 
+    select( -starts_with("DFS"))
+}
+
+tempdata$year <- career[i]
+
+print(colnames(tempdata))
+
+if (i!=1) {
+  data <- rbind(data,tempdata)
+} else {
+  data <- tempdata
+}
+}
+ names(data)[6] <- "venue"
+# colnames(data)
+# glimpse(data)
+
+data <-  data %>% 
+        filter(Gcar!="Tm") %>% 
+        filter(!is.na(Opp)) %>% 
+        mutate(venue=ifelse(venue=="@",venue,"v"))
+
+return(data)
+
+})
+
+```
+
+Row {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+### Individual Game Scores
+
+```{r}
+
+output$pgl_individual <- renderPlotly({
+  pgl() %>% 
+  plot_ly(x=Gcar,y=GSc,mode="markers",color=Tm,
+           hoverinfo = "text",
+          text=paste(Date," ",year,
+                     "<br>",venue,Opp)) %>%
+    layout(hovermode = "closest",
+           title=" ",
+           xaxis=list(title="Game Score"),
+           yaxis=list(title="Career Game",rangemode="tozero"
+           )
+    )
+  })
+
+plotlyOutput("pgl_individual")
+
+```
+
+### By Team
+
+```{r}
+
+output$pgl_team <- renderPlotly({
+  pgl() %>% 
+   plot_ly(y=GSc,type="box",color=Tm, boxpoints = "all", jitter = 0.3,
+           hoverinfo = "text",
+          text=paste(Opp)) %>%
+    layout(hovermode = "closest",
+           title=" ",
+           xaxis=list(title="Team"),
+           yaxis=list(title="Game Scores",rangemode="tozero"
+           )
+    )
+  })
+
+plotlyOutput("pgl_team")
+
 ```
