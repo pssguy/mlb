@@ -18,12 +18,16 @@ library(flexdashboard)
 library(shiny)
 library(plotly)
 library(readr)
-library(Lahman)
+#library(Lahman) - based on 2014 data so replaced byloading relevant files
 library(XML)
+library(stringr)
 
 library(dplyr)
 
 divRaces <- readRDS("allRes1969toDate.rds")
+
+Master <- read_csv("data/Master.csv")
+Pitching <-  read_csv("data/Pitching.csv")
 
 # create data for pitcher selectInput 
 pitchers <- Master %>% 
@@ -375,15 +379,25 @@ NLW2 <- eventReactive(input$go2,{
     
 ```
 
-Pitcher Game Logs
+Pitcher Game Scores
 ===================================== 
-
-Row {data-height=80}
------------------------------------------------------------------------
+Inputs {.sidebar}
+-------------------------------------
 
 ```{r}
- inputPanel(selectInput("log_Pitcher","Select or type Name",bbRef_pitchers),
-            actionButton("go3","Display Charts  (wait for it)"))
+includeMarkdown("gameScore.md")
+
+inputPanel(
+selectInput("log_Pitcher","Select or type Starter's Name",bbRef_pitchers, selected="priceda01"),
+actionButton("go3","Display Charts  (wait for it)")
+)
+includeMarkdown("gameScoreProviso.md")
+
+```
+
+
+```{r}
+ 
 
 pgl <- eventReactive(input$go3,{
   
@@ -397,43 +411,54 @@ bbrefID <-pitchers %>%
 yrs <-Pitching %>% 
   filter(playerID==input$log_Pitcher)
 
-minYr <- min(yrs$yearID)
 
-## take account of Lahman db being up to 2014 only
-maxYr <- ifelse(max(yrs$yearID)==2014,2016,max(yrs$yearID))
 
-career <- minYr:maxYr
+career <- unique(yrs$yearID) # so combines teams
 
-for (i in 1:length(career)) {
-url <- paste0("http://www.baseball-reference.com/players/gl.cgi?id=",bbrefID,"&t=p&year=",career[i])
-# url <- "http://www.baseball-reference.com/players/gl.cgi?id=priceda01&t=p&year=2016"
-tables <- readHTMLTable(url, stringsAsFactors=FALSE)
-tempdata <- tables[["pitching_gamelogs"]]
+## takes account that lahman is only up to 2015
+if(max(career)==2015) career=c(career,2016)
 
-if(career[i]>=2013) {
-  print(career[i])
-  tempdata <- tempdata %>% 
-    select( -starts_with("DFS"))
+# for use in testing of data for year is available
+x <- 0
+
+for (i in seq_along(career)) {
+
+  url <- paste0("http://www.baseball-reference.com/players/gl.cgi?id=",bbrefID,"&t=p&year=",career[i])
+ 
+  # url <- "http://www.baseball-reference.com/players/gl.cgi?id=priceda01&t=p&year=2016"
+  tables <- readHTMLTable(url, stringsAsFactors=FALSE)
+  tempdata <- tables[["pitching_gamelogs"]]
+  
+  ## when different number of columns appear can remove them
+    if(!is.null(tempdata)) {
+   x <- x+1
+  if(career[i]>=2013) {
+    print(career[i])
+    tempdata <- tempdata %>% 
+      select( -starts_with("DFS"))
+  }
+ 
+  
+  tempdata$year <- career[i]
+  
+ 
+  if (x!=1) {
+    data <- rbind(data,tempdata)
+  } else {
+    data <- tempdata
+  }
+}
 }
 
-tempdata$year <- career[i]
-
-print(colnames(tempdata))
-
-if (i!=1) {
-  data <- rbind(data,tempdata)
-} else {
-  data <- tempdata
-}
-}
+# replace blank column heading
  names(data)[6] <- "venue"
-# colnames(data)
-# glimpse(data)
 
 data <-  data %>% 
         filter(Gcar!="Tm") %>% 
         filter(!is.na(Opp)) %>% 
-        mutate(venue=ifelse(venue=="@",venue,"v"))
+        mutate(venue=ifelse(venue=="@",venue,"v")) %>% 
+  mutate(Date=str_replace(Date,"Â",""))
+
 
 return(data)
 
@@ -444,20 +469,27 @@ return(data)
 Row {.tabset .tabset-fade}
 -----------------------------------------------------------------------
 
-### Individual Game Scores
+### Individual Game Scores <br> Zoom as required <br> Hover for details
 
 ```{r}
 
 output$pgl_individual <- renderPlotly({
+
   pgl() %>% 
   plot_ly(x=Gcar,y=GSc,mode="markers",color=Tm,
            hoverinfo = "text",
           text=paste(Date," ",year,
-                     "<br>",venue,Opp)) %>%
+                     "<br>",venue,Opp,
+                     "<br>", Rslt,
+                     "<br> IP:", IP,
+                     "<br> Pitches:", Pit,
+                     "<br> H:", H,
+                     "<br> SO:", SO,
+                     "<br> BB:", BB)) %>%
     layout(hovermode = "closest",
            title=" ",
-           xaxis=list(title="Game Score"),
-           yaxis=list(title="Career Game",rangemode="tozero"
+           xaxis=list(title="Career Game"),
+           yaxis=list(title="Game Score",rangemode="tozero"
            )
     )
   })
@@ -470,6 +502,7 @@ plotlyOutput("pgl_individual")
 
 ```{r}
 
+## does not appear currently able to hover boxpoints
 output$pgl_team <- renderPlotly({
   pgl() %>% 
    plot_ly(y=GSc,type="box",color=Tm, boxpoints = "all", jitter = 0.3,
@@ -484,5 +517,30 @@ output$pgl_team <- renderPlotly({
   })
 
 plotlyOutput("pgl_team")
+
+```
+
+### By Year
+
+```{r}
+
+output$pgl_year <- renderPlotly({
+  
+  write.csv(pgl(),"problem.csv")
+  
+  pgl() %>% 
+    group_by(year) %>% 
+   plot_ly(y=GSc,type="box",color=as.character(year), boxpoints = "all", jitter = 0.3,
+           hoverinfo = "text",
+          text=paste(Opp)) %>%
+    layout(hovermode = "closest",showlegend=FALSE,
+           title=" ",
+           xaxis=list(title=" "),
+           yaxis=list(title="Game Scores",rangemode="tozero"
+           )
+    )
+  })
+
+plotlyOutput("pgl_year")
 
 ```
