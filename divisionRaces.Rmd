@@ -18,6 +18,7 @@ library(flexdashboard)
 library(shiny)
 library(plotly)
 library(readr)
+library(lubridate)
 #library(Lahman) - based on 2014 data so replaced byloading relevant files
 library(XML)
 library(stringr)
@@ -450,6 +451,7 @@ for (i in seq_along(career)) {
 }
 }
 
+
 # replace blank column heading
  names(data)[6] <- "venue"
 
@@ -459,6 +461,7 @@ data <-  data %>%
         mutate(venue=ifelse(venue=="@",venue,"v")) %>% 
   mutate(Date=str_replace(Date,"Â",""))
 
+write_csv(data,"problem.csv")
 
 return(data)
 
@@ -485,7 +488,8 @@ output$pgl_individual <- renderPlotly({
                      "<br> Pitches:", Pit,
                      "<br> H:", H,
                      "<br> SO:", SO,
-                     "<br> BB:", BB)) %>%
+                     "<br> BB:", BB,
+                     "<br> GS:", GSc)) %>%
     layout(hovermode = "closest",
            title=" ",
            xaxis=list(title="Career Game"),
@@ -525,11 +529,11 @@ plotlyOutput("pgl_team")
 ```{r}
 
 output$pgl_year <- renderPlotly({
-  
-  write.csv(pgl(),"problem.csv")
-  
-  pgl() %>% 
-    group_by(year) %>% 
+
+
+
+  pgl() %>%
+    group_by(year) %>%
    plot_ly(y=GSc,type="box",color=as.character(year), boxpoints = "all", jitter = 0.3,
            hoverinfo = "text",
           text=paste(Opp)) %>%
@@ -542,5 +546,49 @@ output$pgl_year <- renderPlotly({
   })
 
 plotlyOutput("pgl_year")
+
+```
+
+### By Month
+
+```{r}
+
+output$pgl_month <- renderPlotly({
+
+
+df <- pgl()
+
+# some manipulation required - prob mot most efficient!
+
+df$month <- tolower(str_sub(df$Date,1,3))
+df$day <- str_sub(df$Date,5,6)
+
+y <- paste0(df$day,df$month,df$year)
+
+df$trueDate<- as.Date(strptime(y, "%d%b%Y"))
+
+
+df$truemonth <- month(df$trueDate,label =TRUE) # 
+
+df$numericmonth <- month(df$trueDate) # 
+
+
+
+df %>% 
+  group_by(numericmonth) %>% 
+  ungroup() %>% 
+  arrange(numericmonth) %>% 
+  plot_ly(y=GSc,type="box",color=as.character(truemonth), boxpoints = "all", jitter = 0.3,
+          hoverinfo = "text",
+          text=paste(Opp)) %>%
+  layout(hovermode = "closest",showlegend=FALSE,
+         title=" ",
+         xaxis=list(title=" "),
+         yaxis=list(title="Game Scores",rangemode="tozero"
+         )
+  )
+  })
+
+plotlyOutput("pgl_month")
 
 ```
