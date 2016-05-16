@@ -595,10 +595,9 @@ output$pgl_year <- renderPlotly({
 
   pgl() %>%
     group_by(year) %>%
-   plot_ly(y=GSc,type="box",color=as.character(year), boxpoints = "all", jitter = 0.3,
-           hoverinfo = "text",
-          text=paste(Opp)) %>%
-    layout(hovermode = "closest",showlegend=FALSE,
+   plot_ly(y=GSc,type="box",color=as.character(year), boxpoints = "all", jitter = 0.3
+          ) %>%
+    layout(showlegend=FALSE,
            title=" ",
            xaxis=list(title=" "),
            yaxis=list(title="Game Scores",rangemode="tozero"
@@ -639,10 +638,8 @@ df %>%
   group_by(numericmonth) %>% 
   ungroup() %>% 
   arrange(numericmonth) %>% 
-  plot_ly(y=GSc,type="box",color=as.character(truemonth), boxpoints = "all", jitter = 0.3,
-          hoverinfo = "text",
-          text=paste(Opp)) %>%
-  layout(hovermode = "closest",showlegend=FALSE,
+  plot_ly(y=GSc,type="box",color=as.character(truemonth), boxpoints = "all", jitter = 0.3) %>%
+  layout(showlegend=FALSE,
          title=" ",
          xaxis=list(title=" "),
          yaxis=list(title="Game Scores",rangemode="tozero"
