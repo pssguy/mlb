@@ -3,6 +3,8 @@ title: "MLB"
 author: "pssguy"
 output: 
   flexdashboard::flex_dashboard:
+    
+    theme: united
     orientation: rows
     social: [ menu ]
     source_code: embed
@@ -422,8 +424,17 @@ if(max(career)==2015) career=c(career,2016)
 # for use in testing of data for year is available
 x <- 0
 
+print(length(career))
+
+l <- length(career)
+
+withProgress(message=" ", value = 0, {
 for (i in seq_along(career)) {
 
+   print(career[i])
+  incProgress(1/l, detail = paste("Season", career[i]))
+
+  
   url <- paste0("http://www.baseball-reference.com/players/gl.cgi?id=",bbrefID,"&t=p&year=",career[i])
  
   # url <- "http://www.baseball-reference.com/players/gl.cgi?id=priceda01&t=p&year=2016"
@@ -450,7 +461,7 @@ for (i in seq_along(career)) {
   }
 }
 }
-
+})
 
 # replace blank column heading
  names(data)[6] <- "venue"
@@ -472,6 +483,7 @@ return(data)
 Row {.tabset .tabset-fade}
 -----------------------------------------------------------------------
 
+
 ### Individual Game Scores <br> Zoom as required <br> Hover for details
 
 ```{r}
@@ -481,6 +493,7 @@ output$pgl_individual <- renderPlotly({
   pgl() %>% 
   plot_ly(x=Gcar,y=GSc,mode="markers",color=Tm,
            hoverinfo = "text",
+          source = "gameScores",
           text=paste(Date," ",year,
                      "<br>",venue,Opp,
                      "<br>", Rslt,
@@ -499,20 +512,46 @@ output$pgl_individual <- renderPlotly({
   })
 
 plotlyOutput("pgl_individual")
-
 ```
+
+
+<!-- ### Selected Game Scores -->
+
+<!-- ```{r} -->
+
+<!-- # table from selected gamescores -->
+<!-- output$pgl_table <- DT::renderDataTable({ -->
+
+<!--   print("enter datatable") -->
+<!-- # Get subset based on selection -->
+<!--     event.data <- event_data("plotly_clicked", source = "gameScores") -->
+
+<!--     # If NULL dont do anything -->
+<!--     if(is.null(event.data) == T) return(NULL) -->
+
+<!--     print(event.data) -->
+
+<!--     pgl() %>%  -->
+<!--      DT::datatable(class='compact stripe hover row-border order-column',rownames=FALSE,options= list(paging = FALSE, searching = FALSE,info=FALSE)) -->
+
+
+<!--   }) -->
+
+<!-- DT::dataTableOutput("pgl_table") -->
+
+<!-- ``` -->
+
 
 ### By Team
 
 ```{r}
 
-## does not appear currently able to hover boxpoints
+
 output$pgl_team <- renderPlotly({
   pgl() %>% 
-   plot_ly(y=GSc,type="box",color=Tm, boxpoints = "all", jitter = 0.3,
-           hoverinfo = "text",
-          text=paste(Opp)) %>%
-    layout(hovermode = "closest",
+   plot_ly(y=GSc,type="box",color=Tm, boxpoints = "all", jitter = 0.3
+           ) %>%
+    layout(
            title=" ",
            xaxis=list(title="Team"),
            yaxis=list(title="Game Scores",rangemode="tozero"
@@ -521,6 +560,28 @@ output$pgl_team <- renderPlotly({
   })
 
 plotlyOutput("pgl_team")
+
+```
+
+
+### By Opposition
+
+```{r}
+
+output$pgl_opp <- renderPlotly({
+  pgl() %>% 
+    arrange(Opp) %>% 
+  plot_ly(y=GSc,type="box",color=Opp, boxpoints = "all"
+  ) %>%
+  layout(
+    title=" ",
+    xaxis=list(title=" "),
+    yaxis=list(title="Game Scores",rangemode="tozero"
+    )
+  )
+  })
+
+plotlyOutput("pgl_opp")
 
 ```
 
@@ -592,3 +653,4 @@ df %>%
 plotlyOutput("pgl_month")
 
 ```
+
