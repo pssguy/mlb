@@ -1,6 +1,6 @@
 ---
 title: "MLB"
-author: "pssguy"
+author: "myTinyShinys"
 output: 
   flexdashboard::flex_dashboard:
     
@@ -24,10 +24,13 @@ library(lubridate)
 #library(Lahman) - based on 2014 data so replaced byloading relevant files
 library(XML)
 library(stringr)
+library(feather)
+
 
 library(dplyr)
 
-divRaces <- readRDS("allRes1969toDate.rds")
+#divRaces <- readRDS("allRes1969toDate.rds")
+divRaces <- read_feather("allRes1969toDate.feather")
 
 Master <- read_csv("data/Master.csv")
 Pitching <-  read_csv("data/Pitching.csv")
@@ -484,7 +487,7 @@ Row {.tabset .tabset-fade}
 -----------------------------------------------------------------------
 
 
-### Individual Game Scores <br> Zoom as required <br> Hover for details
+### Individual Game Scores <br> Zoom as required <br> Hover for details 
 
 ```{r}
 
@@ -515,31 +518,50 @@ plotlyOutput("pgl_individual")
 ```
 
 
-<!-- ### Selected Game Scores -->
-
-<!-- ```{r} -->
-
-<!-- # table from selected gamescores -->
-<!-- output$pgl_table <- DT::renderDataTable({ -->
-
-<!--   print("enter datatable") -->
-<!-- # Get subset based on selection -->
-<!--     event.data <- event_data("plotly_clicked", source = "gameScores") -->
-
-<!--     # If NULL dont do anything -->
-<!--     if(is.null(event.data) == T) return(NULL) -->
-
-<!--     print(event.data) -->
-
-<!--     pgl() %>%  -->
-<!--      DT::datatable(class='compact stripe hover row-border order-column',rownames=FALSE,options= list(paging = FALSE, searching = FALSE,info=FALSE)) -->
 
 
-<!--   }) -->
+```{r}
 
-<!-- DT::dataTableOutput("pgl_table") -->
 
-<!-- ``` -->
+# click_point <- eventReactive(input$pgl_individual_marker_click, {
+#   
+#   
+#   # Get subset based on selection
+#     event.data <- event_data("plotly_click", source = "gameScores")
+#     
+#      if(is.null(event.data) == T) return(NULL)
+# 
+#     print(event.data)
+# 
+#     # x <- input$map_shape_click
+#     # 
+#     # y <- x$id
+#     # 
+#     # return(y)
+# 
+#   })
+
+#table from selected gamescores
+# output$pgl_table <- DT::renderDataTable({
+# 
+#   print("enter datatable")
+# # Get subset based on selection
+#     event.data <- event_data("plotly_clicked", source = "gameScores")
+# 
+#     # If NULL dont do anything
+#     if(is.null(event.data) == T) return(NULL)
+# 
+#     print(event.data)
+# 
+#     pgl() %>%
+#      DT::datatable(class='compact stripe hover row-border order-column',rownames=FALSE,options= list(paging = FALSE, searching = FALSE,info=FALSE))
+# 
+# 
+#   })
+# 
+#  DT::dataTableOutput("pgl_table")
+
+``` 
 
 
 ### By Team
@@ -651,3 +673,91 @@ plotlyOutput("pgl_month")
 
 ```
 
+Pitcher WAR comparisons
+===================================== 
+Inputs {.sidebar}
+-------------------------------------
+
+```{r}
+includeMarkdown("WAR.md")
+
+inputPanel(
+selectInput("war_Pitcher","Select or type Starter's Name",bbRef_pitchers, selected=c("kershcl01","martipe02"),multiple=T),
+actionButton("go4","Display Charts  (wait for it)")
+)
+#includeMarkdown("gameScoreProviso.md")
+
+```
+
+
+```{r}
+
+pitcherWARdata <- eventReactive(input$go4,{
+choices <- input$war_Pitcher
+
+#withProgress(message=" ", value = 0, {
+  for (i in seq_along(choices)) {
+    
+    print(choices[i])
+    #incProgress(1/l, detail = paste("Pitcher", choices[i]))
+    initial <- str_sub(choices[i],1,1)
+    
+    url <- paste0("http://www.baseball-reference.com/players/",initial,"/",choices[i],".shtml")
+    
+    # url <- "http://www.baseball-reference.com/players/gl.cgi?id=priceda01&t=p&year=2016"
+    tables <- readHTMLTable(url, stringsAsFactors=FALSE)
+    #names(tables)
+    tempdata <- tables[["pitching_value"]]
+    tempdata$bbrefID <- choices[i]
+    
+    
+    
+      
+      if ( i!=1) {
+        data <- rbind(data,tempdata)
+      } else {
+        data <- tempdata
+      }
+    }
+#}
+
+WARdata <-data %>% 
+  left_join(Master) %>% 
+  mutate(name=paste0(nameFirst," ",nameLast),WAR=as.numeric(WAR)) %>% 
+  select(Age,name,WAR,bbrefID)
+
+glimpse(WARdata)
+
+# in caas 2 clubs
+byYear <- WARdata %>% 
+         group_by(Age,name,bbrefID) %>% 
+         summarize(yrWAR=sum(WAR,na.rm=T)) %>% 
+  group_by(name) %>% 
+      mutate(cumWAR=cumsum(yrWAR))
+
+info=list(WARdata=WARdata,byYear=byYear)
+return(info)
+
+})
+```
+
+Row
+-----------------------------------------------------------------------
+
+```{r pitcher WAR chart}
+
+output$pitcherWAR <- renderPlotly({
+  
+  pitcherWARdata()$byYear %>% 
+  plot_ly(x=Age,y=cumWAR,color=name) %>% 
+  add_trace(x=Age,y=yrWAR,color=name,type="bar",showlegend=FALSE)
+  layout(
+    title="Comparison of Annual and Cumulative Pitching bbRef WAR by Age",
+   
+    yaxis=list(title="Cumulative WAR")
+  )
+})
+
+plotlyOutput("pitcherWAR")
+
+```
