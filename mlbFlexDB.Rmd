@@ -1,0 +1,765 @@
+---
+title: "MLB"
+author: "myTinyShinys"
+output: 
+  flexdashboard::flex_dashboard:
+    
+    theme: united
+    orientation: rows
+    social: [ menu ]
+    source_code: embed
+runtime: shiny
+---
+
+
+
+
+```{r setup, include=FALSE}
+# Load packages and initialize data here
+library(flexdashboard)
+library(shiny)
+library(plotly)
+library(readr)
+library(lubridate)
+#library(Lahman) - based on 2014 data so replaced byloading relevant files
+library(XML)
+library(stringr)
+library(feather)
+
+
+library(dplyr)
+
+#divRaces <- readRDS("allRes1969toDate.rds")
+divRaces <- read_feather("allRes1969toDate.feather")
+
+Master <- read_csv("data/Master.csv")
+Pitching <-  read_csv("data/Pitching.csv")
+
+# create data for pitcher selectInput 
+pitchers <- Master %>% 
+  mutate(lastYear=ifelse(is.na(deathYear)," ",deathYear)) %>% 
+          right_join(Pitching) %>% 
+           select(nameFirst,nameLast,birthYear,lastYear,bbrefID,playerID) %>% 
+           unique() %>% 
+            arrange(bbrefID)
+
+bbRef_pitchers <- pitchers$playerID
+
+names(bbRef_pitchers) <- paste0(pitchers$nameFirst," ", pitchers$nameLast," (",pitchers$birthYear,"-",pitchers$lastYear,")")
+
+
+```
+
+1994-2016 {data-navmenu="Division Races"}
+===================================== 
+
+Row {data-height=150}
+-----------------------------------------------------------------------
+
+```{r}
+ inputPanel(sliderInput("race_yr","Enter year of choice",value=2016,min=1994,max=2016,sep=""),
+            actionButton("go","Click for charts (takes 10+secs"))
+```
+
+
+
+Row
+-----------------------------------------------------------------------
+
+### AL East (Hover Lines for Details - Zoom as required)
+
+```{r}
+ALE <- eventReactive(input$go,{
+  final_sel <- divRaces %>% 
+    filter(league=="AL"&divison=="East"&season==input$race_yr)
+})
+
+  
+  output$ALE_race <- renderPlotly({
+  plot_ly(ALE(), x = ~gameOrder, y = ~diff, mode = "lines", hoverinfo = "text",color=~Team,
+          text = paste(ALE()$Team,
+                       "<br>",ALE()$Date,
+                       "<br> v ",ALE()$Opp," "," ",ALE()$R,"-",ALE()$RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",ALE()$GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("ALE_race")
+```
+
+### AL Central
+
+```{r}
+ALC <- eventReactive(input$go,{
+  final_sel <- divRaces %>% 
+    filter(league=="AL"&divison=="Central"&season==input$race_yr)
+})
+
+  
+  output$ALC_race <- renderPlotly({
+  plot_ly(ALC(), x = ~gameOrder, y = ~diff, mode = "lines", hoverinfo = "text",color=~Team,
+          text = paste(ALC()$Team,
+                       "<br>",ALC()$Date,
+                       "<br> v ",ALC()$Opp," "," ",ALC()$R,"-",ALC()$RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",ALC()$GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("ALC_race")
+   
+```
+
+### AL West
+
+```{r}
+ALW <- eventReactive(input$go,{
+  final_sel <- divRaces %>% 
+    filter(league=="AL"&divison=="West"&season==input$race_yr)
+})
+
+  
+  output$ALW_race <- renderPlotly({
+  plot_ly(ALW(), x = ~gameOrder, y = ~diff, mode = "lines", hoverinfo = "text",color=~Team,
+          text = paste(ALW()$Team,
+                       "<br>",ALW()$Date,
+                       "<br> v ",ALW()$Opp," "," ",ALW()$R,"-",ALW()$RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",ALW()$GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("ALW_race")
+```
+
+Row
+-----------------------------------------------------------------------
+
+### NL East
+
+```{r }
+NLE <- eventReactive(input$go,{
+  final_sel <- divRaces %>% 
+    filter(league=="NL"&divison=="East"&season==input$race_yr)
+})
+
+  
+  output$NLE_race <- renderPlotly({
+  plot_ly(NLE(), x = ~gameOrder, y = ~diff, mode = "lines", hoverinfo = "text",color=~Team,
+          text = paste(NLE()$Team,
+                       "<br>",NLE()$Date,
+                       "<br> v ",NLE()$Opp," "," ",NLE()$R,"-",NLE()$RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",NLE()$GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("NLE_race")
+```
+
+### NL Central
+
+```{r}
+NLC <- eventReactive(input$go,{
+  final_sel <- divRaces %>% 
+    filter(league=="NL"&divison=="Central"&season==input$race_yr)
+})
+
+  
+  output$NLC_race <- renderPlotly({
+  plot_ly(NLC(), x = ~gameOrder, y = ~diff, mode = "lines", hoverinfo = "text",color=~Team,
+          text = paste(NLC()$Team,
+                       "<br>",NLC()$Date,
+                       "<br> v ",NLC()$Opp," "," ",NLC()$R,"-",NLC()$RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",NLC()$GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("NLC_race")
+```
+
+### NL West
+
+```{r}
+NLW <- eventReactive(input$go,{
+  final_sel <- divRaces %>% 
+    filter(league=="NL"&divison=="West"&season==input$race_yr)
+})
+
+  
+  output$NLW_race <- renderPlotly({
+  plot_ly(NLW(), x = ~gameOrder, y = ~diff, mode = "lines", hoverinfo = "text",color=~Team,
+          text = paste(NLW()$Team,
+                       "<br>",NLW()$Date,
+                       "<br> v ",NLW()$Opp," "," ",NLW()$R,"-",NLW()$RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",NLW()$GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("NLW_race")
+    
+```
+
+1969-1993 {data-navmenu="Division Races"}
+===================================== 
+
+Row {data-height=150}
+-----------------------------------------------------------------------
+
+```{r}
+ inputPanel(sliderInput("race_yr2","Enter year of choice",value=1993,min=1969,max=1993,sep=""),
+            actionButton("go2","Display Charts (coming soon)"))
+```
+
+
+
+Row
+-----------------------------------------------------------------------
+
+### AL East
+
+```{r}
+ALE2 <- eventReactive(input$go2,{
+  final_sel <- divRaces %>% 
+    filter(league=="AL"&divison=="East"&season==input$race_yr2)
+})
+
+  
+  output$ALE2_race <- renderPlotly({
+  plot_ly(ALE2(), x = ~gameOrder, y = ~diff, mode = "lines", hoverinfo = "text",color=~Team,
+          text = paste(ALE2()$Team,
+                       "<br>",ALE2()$Date,
+                       "<br> v ",ALE2()$Opp," "," ",ALE2()$R,"-",ALE2()$RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",ALE2()$GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("ALE2_race")
+```
+
+
+
+### AL West
+
+```{r}
+ALW2 <- eventReactive(input$go2,{
+  final_sel <- divRaces %>% 
+    filter(league=="AL"&divison=="West"&season==input$race_yr2)
+})
+
+  
+  output$ALW2_race <- renderPlotly({
+  plot_ly(ALW2(), x = ~gameOrder, y = ~diff, mode = "lines", hoverinfo = "text",color=~Team,
+          text = paste(ALW2()$Team,
+                       "<br>",ALW2()$Date,
+                       "<br> v ",ALW2()$Opp," "," ",ALW2()$R,"-",ALW2()$RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",ALW2()$GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("ALW2_race")
+```
+
+Row
+-----------------------------------------------------------------------
+
+### NL East
+
+```{r }
+NLE2 <- eventReactive(input$go2,{
+  final_sel <- divRaces %>% 
+    filter(league=="NL"&divison=="East"&season==input$race_yr2)
+})
+
+  
+  output$NLE2_race <- renderPlotly({
+  plot_ly(NLE2(), x = ~gameOrder, y = ~diff, mode = "lines", hoverinfo = "text",color=~Team,
+          text = paste(NLE2()$Team,
+                       "<br>",NLE2()$Date,
+                       "<br> v ",NLE2()$Opp," "," ",NLE2()$R,"-",NLE2()$RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",NLE2()$GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("NLE2_race")
+```
+
+
+
+### NL West
+
+```{r}
+NLW2 <- eventReactive(input$go2,{
+  final_sel <- divRaces %>% 
+    filter(league=="NL"&divison=="West"&season==input$race_yr2)
+})
+
+  
+  output$NLW2_race <- renderPlotly({
+  plot_ly(NLW2(), x = ~gameOrder, y = ~diff, mode = "lines", hoverinfo = "text",color=~Team,
+          text = paste(NLW2()$Team,
+                       "<br>",NLW2()$Date,
+                       "<br> v ",NLW2()$Opp," "," ",NLW2()$R,"-",NLW2()$RA,
+                      # "<br> W-L:",toDate,
+                       "<br> GB:",NLW2()$GB)) %>% 
+    
+    layout(hovermode = "closest", 
+           xaxis=list(title="Games Played"),
+           yaxis=list(title="Games Behind Division Leader", autorange="reversed"
+                  
+           )
+    ) %>% 
+   config(displayModeBar = F,showLink = F)
+  })
+  
+  plotlyOutput("NLW2_race")
+    
+```
+
+Pitcher Game Scores
+===================================== 
+Inputs {.sidebar}
+-------------------------------------
+
+```{r}
+includeMarkdown("gameScore.md")
+
+inputPanel(
+selectInput("log_Pitcher","Select or type Starter's Name",bbRef_pitchers, selected="priceda01"),
+actionButton("go3","Display Charts  (wait for it)")
+)
+includeMarkdown("gameScoreProviso.md")
+
+```
+
+
+```{r}
+ 
+
+pgl <- eventReactive(input$go3,{
+  
+ print(input$log_Pitcher)
+  print(glimpse(pitchers))
+  
+bbrefID <-pitchers %>% 
+  filter(playerID==input$log_Pitcher) %>% 
+  .$bbrefID
+
+yrs <-Pitching %>% 
+  filter(playerID==input$log_Pitcher)
+
+
+
+career <- unique(yrs$yearID) # so combines teams
+
+## takes account that lahman is only up to 2015
+if(max(career)==2015) career=c(career,2016)
+
+# for use in testing of data for year is available
+x <- 0
+
+print(length(career))
+
+l <- length(career)
+
+withProgress(message=" ", value = 0, {
+for (i in seq_along(career)) {
+
+   print(career[i])
+  incProgress(1/l, detail = paste("Season", career[i]))
+
+  
+  url <- paste0("http://www.baseball-reference.com/players/gl.cgi?id=",bbrefID,"&t=p&year=",career[i])
+ 
+  # url <- "http://www.baseball-reference.com/players/gl.cgi?id=priceda01&t=p&year=2016"
+  tables <- readHTMLTable(url, stringsAsFactors=FALSE)
+  tempdata <- tables[["pitching_gamelogs"]]
+  
+  ## when different number of columns appear can remove them
+    if(!is.null(tempdata)) {
+   x <- x+1
+  if(career[i]>=2013) {
+    print(career[i])
+    tempdata <- tempdata %>% 
+      select( -starts_with("DFS"))
+  }
+ 
+  
+  tempdata$year <- career[i]
+  
+ 
+  if (x!=1) {
+    data <- rbind(data,tempdata)
+  } else {
+    data <- tempdata
+  }
+}
+}
+})
+
+# replace blank column heading
+ names(data)[6] <- "venue"
+
+data <-  data %>% 
+        filter(Gcar!="Tm") %>% 
+        filter(!is.na(Opp)) %>% 
+        mutate(venue=ifelse(venue=="@",venue,"v")) %>% 
+  mutate(Date=str_replace(Date,"Â",""))
+
+
+
+return(data)
+
+})
+
+```
+
+Row {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+
+### Individual Game Scores <br> Zoom as required <br> Hover for details 
+
+```{r}
+
+output$pgl_individual <- renderPlotly({
+
+  #write_csv(pgl(),"problem.csv") seemed to work OK
+  
+  pgl() %>% 
+  plot_ly(x=~Gcar,y=~GSc,mode="markers",color=~Tm,
+           hoverinfo = "text",
+          source = "gameScores",
+          text=paste(pgl()$Date," ",pgl()$year,
+                     "<br>",pgl()$venue,pgl()$Opp,
+                     "<br>", pgl()$Rslt,
+                     "<br> IP:", pgl()$IP,
+                     "<br> Pitches:", pgl()$Pit,
+                     "<br> H:", pgl()$H,
+                     "<br> SO:", pgl()$SO,
+                     "<br> BB:", pgl()$BB,
+                     "<br> GS:", pgl()$GSc)) %>%
+    layout(hovermode = "closest",
+           title=" ",
+           xaxis=list(title="Career Game"),
+           yaxis=list(title="Game Score",rangemode="tozero"
+           )
+    )
+  })
+
+plotlyOutput("pgl_individual")
+```
+
+
+
+
+```{r}
+
+
+# click_point <- eventReactive(input$pgl_individual_marker_click, {
+#   
+#   
+#   # Get subset based on selection
+#     event.data <- event_data("plotly_click", source = "gameScores")
+#     
+#      if(is.null(event.data) == T) return(NULL)
+# 
+#     print(event.data)
+# 
+#     # x <- input$map_shape_click
+#     # 
+#     # y <- x$id
+#     # 
+#     # return(y)
+# 
+#   })
+
+#table from selected gamescores
+# output$pgl_table <- DT::renderDataTable({
+# 
+#   print("enter datatable")
+# # Get subset based on selection
+#     event.data <- event_data("plotly_clicked", source = "gameScores")
+# 
+#     # If NULL dont do anything
+#     if(is.null(event.data) == T) return(NULL)
+# 
+#     print(event.data)
+# 
+#     pgl() %>%
+#      DT::datatable(class='compact stripe hover row-border order-column',rownames=FALSE,options= list(paging = FALSE, searching = FALSE,info=FALSE))
+# 
+# 
+#   })
+# 
+#  DT::dataTableOutput("pgl_table")
+
+``` 
+
+
+### By Team
+
+```{r}
+
+
+output$pgl_team <- renderPlotly({
+  pgl() %>% 
+   plot_ly(y=GSc,type="box",color=Tm, boxpoints = "all", jitter = 0.3
+           ) %>%
+    layout(
+           title=" ",
+           xaxis=list(title="Team"),
+           yaxis=list(title="Game Scores",rangemode="tozero"
+           )
+    )
+  })
+
+plotlyOutput("pgl_team")
+
+```
+
+
+### By Opposition
+
+```{r}
+
+output$pgl_opp <- renderPlotly({
+  pgl() %>% 
+    arrange(Opp) %>% 
+  plot_ly(y=GSc,type="box",color=Opp, boxpoints = "all"
+  ) %>%
+  layout(
+    title=" ",
+    xaxis=list(title=" "),
+    yaxis=list(title="Game Scores",rangemode="tozero"
+    )
+  )
+  })
+
+plotlyOutput("pgl_opp")
+
+```
+
+### By Year
+
+```{r}
+
+output$pgl_year <- renderPlotly({
+
+
+
+  pgl() %>%
+    group_by(year) %>%
+   plot_ly(y=GSc,type="box",color=as.character(year), boxpoints = "all", jitter = 0.3
+          ) %>%
+    layout(showlegend=FALSE,
+           title=" ",
+           xaxis=list(title=" "),
+           yaxis=list(title="Game Scores",rangemode="tozero"
+           )
+    )
+  })
+
+plotlyOutput("pgl_year")
+
+```
+
+### By Month
+
+```{r}
+
+output$pgl_month <- renderPlotly({
+
+
+df <- pgl()
+
+# some manipulation required - prob mot most efficient!
+
+df$month <- tolower(str_sub(df$Date,1,3))
+df$day <- str_sub(df$Date,5,6)
+
+y <- paste0(df$day,df$month,df$year)
+
+df$trueDate<- as.Date(strptime(y, "%d%b%Y"))
+
+
+df$truemonth <- month(df$trueDate,label =TRUE) # 
+
+df$numericmonth <- month(df$trueDate) # 
+
+
+
+df %>% 
+  group_by(numericmonth) %>% 
+  ungroup() %>% 
+  arrange(numericmonth) %>% 
+  plot_ly(y=GSc,type="box",color=as.character(truemonth), boxpoints = "all", jitter = 0.3) %>%
+  layout(showlegend=FALSE,
+         title=" ",
+         xaxis=list(title=" "),
+         yaxis=list(title="Game Scores",rangemode="tozero"
+         )
+  )
+  })
+
+plotlyOutput("pgl_month")
+
+```
+
+Pitcher WAR comparisons
+===================================== 
+Inputs {.sidebar}
+-------------------------------------
+
+```{r}
+includeMarkdown("WAR.md")
+
+inputPanel(
+selectInput("war_Pitcher","Select or type Starter's Name",bbRef_pitchers, selected=c("kershcl01","martipe02"),multiple=T),
+actionButton("go4","Display Charts  (wait for it)")
+)
+#includeMarkdown("gameScoreProviso.md")
+
+```
+
+
+```{r}
+
+pitcherWARdata <- eventReactive(input$go4,{
+choices <- input$war_Pitcher
+
+#withProgress(message=" ", value = 0, {
+  for (i in seq_along(choices)) {
+    
+    print(choices[i])
+    #incProgress(1/l, detail = paste("Pitcher", choices[i]))
+    initial <- str_sub(choices[i],1,1)
+    
+    url <- paste0("http://www.baseball-reference.com/players/",initial,"/",choices[i],".shtml")
+    
+    # url <- "http://www.baseball-reference.com/players/gl.cgi?id=priceda01&t=p&year=2016"
+    tables <- readHTMLTable(url, stringsAsFactors=FALSE)
+    #names(tables)
+    tempdata <- tables[["pitching_value"]]
+    tempdata$bbrefID <- choices[i]
+    
+    
+    
+      
+      if ( i!=1) {
+        data <- rbind(data,tempdata)
+      } else {
+        data <- tempdata
+      }
+    }
+#}
+
+WARdata <-data %>% 
+  left_join(Master) %>% 
+  mutate(name=paste0(nameFirst," ",nameLast),WAR=as.numeric(WAR)) %>% 
+  select(Age,name,WAR,bbrefID)
+
+glimpse(WARdata)
+
+# in caas 2 clubs
+byYear <- WARdata %>% 
+         group_by(Age,name,bbrefID) %>% 
+         summarize(yrWAR=sum(WAR,na.rm=T)) %>% 
+  group_by(name) %>% 
+      mutate(cumWAR=cumsum(yrWAR))
+
+info=list(WARdata=WARdata,byYear=byYear)
+return(info)
+
+})
+```
+
+Row
+-----------------------------------------------------------------------
+
+```{r pitcher WAR chart}
+
+output$pitcherWAR <- renderPlotly({
+  
+  pitcherWARdata()$byYear %>% 
+  plot_ly(x=Age,y=cumWAR,color=name, mode="markers+lines") %>% 
+  add_trace(x=Age,y=yrWAR,color=name,type="bar",showlegend=FALSE)
+  layout(
+    title="Comparison of Annual and Cumulative Pitching bbRef WAR by Age",
+   
+    yaxis=list(title="Cumulative WAR")
+  )
+})
+
+plotlyOutput("pitcherWAR")
+
+```
