@@ -7,7 +7,7 @@ output:
     theme: united
     orientation: rows
     social: [ menu ]
-    source_code: embed
+   # source_code: embed
 runtime: shiny
 ---
 
@@ -29,8 +29,8 @@ library(feather)
 
 library(dplyr)
 
-#divRaces <- readRDS("allRes1969toDate.rds")
-divRaces <- read_feather("allRes1969toDate.feather")
+divRaces <- readRDS("allRes1969toDate.rds")
+#divRaces <- read_feather("allRes1969toDate.feather") #This Feather file is old and will not be readable beyond the 0.3.0 release #Error in coldataFeather(x, i) : embedded nul in string: 'sday, Aug 25'
 
 Master <- read_csv("data/Master.csv")
 Pitching <-  read_csv("data/Pitching.csv")
@@ -47,6 +47,19 @@ bbRef_pitchers <- pitchers$playerID
 
 names(bbRef_pitchers) <- paste0(pitchers$nameFirst," ", pitchers$nameLast," (",pitchers$birthYear,"-",pitchers$lastYear,")")
 
+
+## cf batters
+
+  batters <- Master %>% 
+    mutate(lastYear=ifelse(is.na(deathYear)," ",deathYear)) %>% 
+    select(nameFirst,nameLast,birthYear,lastYear,bbrefID,playerID) %>% 
+    unique() %>% 
+    arrange(bbrefID)
+  
+  bbRef_batters <- batters$playerID
+  
+  names(bbRef_batters) <- paste0(batters$nameFirst," ", batters$nameLast," (",batters$birthYear,"-",batters$lastYear,")")
+  
 
 ```
 
@@ -394,7 +407,7 @@ Inputs {.sidebar}
 includeMarkdown("gameScore.md")
 
 inputPanel(
-selectInput("log_Pitcher","Select or type Starter's Name",bbRef_pitchers, selected="priceda01"),
+selectInput("log_Pitcher","Select or type Starter's Name",bbRef_pitchers, selected="hernafe02"),
 actionButton("go3","Display Charts  (wait for it)")
 )
 includeMarkdown("gameScoreProviso.md")
@@ -473,8 +486,8 @@ data <-  data %>%
         filter(Gcar!="Tm") %>% 
         filter(!is.na(Opp)) %>% 
         mutate(venue=ifelse(venue=="@",venue,"v")) %>% 
-  mutate(Date=str_replace(Date,"Â",""))
-
+  mutate(Date=str_replace(Date,"Â","")) %>% 
+  mutate(Gcar=as.integer(Gcar),GSc=as.integer(GSc))
 
 
 return(data)
@@ -493,21 +506,30 @@ Row {.tabset .tabset-fade}
 
 output$pgl_individual <- renderPlotly({
 
-  #write_csv(pgl(),"problem.csv") seemed to work OK
+  write_csv(pgl(),"problem2.csv") #seemed to work OK
   
-  pgl() %>% 
-  plot_ly(x=~Gcar,y=~GSc,mode="markers",color=~Tm,
+  df <- pgl()
+  
+#   print(glimpse(df))
+#   
+#   ## issue seems to be that all values are character
+# df <-  df %>% 
+#     mutate(Gcar=as.integer(Gcar),GSc=as.integer(GSc))
+  
+ df %>% 
+  plot_ly() %>% 
+    add_markers(x=~Gcar,y=~GSc,color=~Tm,
            hoverinfo = "text",
-          source = "gameScores",
-          text=paste(pgl()$Date," ",pgl()$year,
-                     "<br>",pgl()$venue,pgl()$Opp,
-                     "<br>", pgl()$Rslt,
-                     "<br> IP:", pgl()$IP,
-                     "<br> Pitches:", pgl()$Pit,
-                     "<br> H:", pgl()$H,
-                     "<br> SO:", pgl()$SO,
-                     "<br> BB:", pgl()$BB,
-                     "<br> GS:", pgl()$GSc)) %>%
+          #source = "gameScores",#not sure why that was in there
+          text=~paste(Date," ",year,
+                     "<br>",venue,Opp,
+                     "<br>", Rslt,
+                     "<br> IP:", IP,
+                     "<br> Pitches:", Pit,
+                     "<br> H:", H,
+                     "<br> SO:", SO,
+                     "<br> BB:", BB,
+                     "<br> GS:", GSc)) %>%
     layout(hovermode = "closest",
            title=" ",
            xaxis=list(title="Career Game"),
@@ -573,7 +595,7 @@ plotlyOutput("pgl_individual")
 
 output$pgl_team <- renderPlotly({
   pgl() %>% 
-   plot_ly(y=GSc,type="box",color=Tm, boxpoints = "all", jitter = 0.3
+   plot_ly(y=~GSc,type="box",color=~Tm, boxpoints = "all", jitter = 0.3
            ) %>%
     layout(
            title=" ",
@@ -595,7 +617,7 @@ plotlyOutput("pgl_team")
 output$pgl_opp <- renderPlotly({
   pgl() %>% 
     arrange(Opp) %>% 
-  plot_ly(y=GSc,type="box",color=Opp, boxpoints = "all"
+  plot_ly(y=~GSc,type="box",color=~Opp, boxpoints = "all"
   ) %>%
   layout(
     title=" ",
@@ -618,8 +640,9 @@ output$pgl_year <- renderPlotly({
 
 
   pgl() %>%
-    group_by(year) %>%
-   plot_ly(y=GSc,type="box",color=as.character(year), boxpoints = "all", jitter = 0.3
+    #group_by(year) %>%
+    plot_ly() %>% 
+   add_boxplot(y=~GSc,color=~as.character(year), boxpoints = "all", jitter = 0.3
           ) %>%
     layout(showlegend=FALSE,
            title=" ",
@@ -644,31 +667,32 @@ df <- pgl()
 
 # some manipulation required - prob mot most efficient!
 
-df$month <- tolower(str_sub(df$Date,1,3))
-df$day <- str_sub(df$Date,5,6)
-
-y <- paste0(df$day,df$month,df$year)
-
-df$trueDate<- as.Date(strptime(y, "%d%b%Y"))
-
-
-df$truemonth <- month(df$trueDate,label =TRUE) # 
-
-df$numericmonth <- month(df$trueDate) # 
-
-
-
-df %>% 
-  group_by(numericmonth) %>% 
-  ungroup() %>% 
-  arrange(numericmonth) %>% 
-  plot_ly(y=GSc,type="box",color=as.character(truemonth), boxpoints = "all", jitter = 0.3) %>%
-  layout(showlegend=FALSE,
-         title=" ",
-         xaxis=list(title=" "),
-         yaxis=list(title="Game Scores",rangemode="tozero"
-         )
-  )
+ df$month <- tolower(str_sub(df$Date,1,3))
+         df$day <- str_sub(df$Date,5,6)
+         
+         y <- paste0(df$day,df$month,df$year)
+         
+         df$trueDate<- as.Date(strptime(y, "%d%b%Y"))
+         
+         
+         df$truemonth <- month(df$trueDate,label =TRUE, abbr=FALSE) # 
+         
+         df$numericmonth <- month(df$trueDate) # 
+         
+         df$Month <- factor(df$truemonth,levels=month.name)
+         
+       
+         
+       df  %>% 
+           plot_ly() %>% 
+         add_boxplot(y=~GSc,color=~Month, boxpoints = "all", jitter = 0.3) %>%
+           layout(showlegend=FALSE,
+                  title=" ",
+                  xaxis=list(title=" ",autorange = "reversed"),
+                  yaxis=list(title="Game Scores",rangemode="tozero"
+                  )
+           )
+        
   })
 
 plotlyOutput("pgl_month")
@@ -750,16 +774,114 @@ Row
 
 output$pitcherWAR <- renderPlotly({
   
-  pitcherWARdata()$byYear %>% 
-  plot_ly(x=Age,y=cumWAR,color=name, mode="markers+lines") %>% 
-  add_trace(x=Age,y=yrWAR,color=name,type="bar",showlegend=FALSE)
+  df <- pitcherWARdata()$byYear
+   df  %>% 
+     plot_ly() %>% 
+  add_lines(x=~Age,y=~cumWAR,color=~name) %>% 
+  add_bars(x=~Age,y=~yrWAR,color=~name,showlegend=FALSE) %>% 
   layout(
     title="Comparison of Annual and Cumulative Pitching bbRef WAR by Age",
    
     yaxis=list(title="Cumulative WAR")
   )
+  
+  
 })
 
 plotlyOutput("pitcherWAR")
+
+```
+
+
+Batter WAR comparisons
+===================================== 
+Inputs {.sidebar}
+-------------------------------------
+
+```{r}
+includeMarkdown("WAR.md")
+
+inputPanel(
+selectInput("war_Batter","Select or type Batters' Name",bbRef_batters, selected=c("troutmi01","rodrial01"),multiple=T),
+actionButton("go5","Display Charts  (wait for it)")
+)
+#includeMarkdown("gameScoreProviso.md")
+
+```
+
+
+```{r}
+
+ batterWARdata <- eventReactive(input$go5,{
+    choices <- input$war_Batter
+    # choices <- c("troutmi01","rodrial01") i <- 1
+    
+    #withProgress(message=" ", value = 0, {
+    for (i in seq_along(choices)) {
+      
+      print(choices[i])
+      #incProgress(1/l, detail = paste("Pitcher", choices[i]))
+      initial <- str_sub(choices[i],1,1)
+      
+      url <- paste0("http://www.baseball-reference.com/players/",initial,"/",choices[i],".shtml")
+      
+      # url <- "http://www.baseball-reference.com/players/gl.cgi?id=priceda01&t=p&year=2016"
+      tables <- readHTMLTable(url, stringsAsFactors=FALSE)
+      #names(tables)
+      tempdata <- tables[["batting_value"]]
+      tempdata$bbrefID <- choices[i]
+      
+      
+      
+      
+      if ( i!=1) {
+        data <- rbind(data,tempdata)
+      } else {
+        data <- tempdata
+      }
+    }
+    #}
+    
+    WARdata <-data %>% 
+      left_join(Master) %>% 
+      mutate(name=paste0(nameFirst," ",nameLast),WAR=as.numeric(WAR)) %>% 
+      select(Age,name,WAR,bbrefID)
+    
+    glimpse(WARdata)
+    
+    # in caas 2 clubs
+    byYear <- WARdata %>% 
+      group_by(Age,name,bbrefID) %>% 
+      summarize(yrWAR=sum(WAR,na.rm=T)) %>% 
+      group_by(name) %>% 
+      mutate(cumWAR=cumsum(yrWAR))
+    
+    info=list(WARdata=WARdata,byYear=byYear)
+    return(info)
+})
+```
+
+Row
+-----------------------------------------------------------------------
+
+```{r batter WAR chart}
+
+ output$batterWAR <- renderPlotly({
+    
+    df <- batterWARdata()$byYear #df <- byYear
+    df  %>% 
+      plot_ly() %>% 
+      add_lines(x=~Age,y=~cumWAR,color=~name) %>% 
+      add_bars(x=~Age,y=~yrWAR,color=~name,showlegend=FALSE) %>% 
+      layout(
+        title="Comparison of Annual and Cumulative Batting bbRef WAR by Age",
+        
+        yaxis=list(title="Cumulative WAR")
+      )
+    
+    
+  })
+  
+  plotlyOutput("batterWAR")
 
 ```
