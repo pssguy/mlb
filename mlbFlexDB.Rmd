@@ -21,16 +21,16 @@ library(shiny)
 library(plotly)
 library(readr)
 library(lubridate)
-#library(Lahman) - based on 2014 data so replaced byloading relevant files
+
 library(XML)
 library(stringr)
-library(feather)
+
 
 
 library(dplyr)
 
 divRaces <- readRDS("allRes1969toDate.rds")
-#divRaces <- read_feather("allRes1969toDate.feather") #This Feather file is old and will not be readable beyond the 0.3.0 release #Error in coldataFeather(x, i) : embedded nul in string: 'sday, Aug 25'
+#divRaces <- read_feather("allRes1969toDate.feather") #issues with this. not suitable format for long term storage
 
 Master <- read_csv("data/Master.csv")
 Pitching <-  read_csv("data/Pitching.csv")
@@ -351,7 +351,6 @@ NLE2 <- eventReactive(input$go2,{
           text = paste(NLE2()$Team,
                        "<br>",NLE2()$Date,
                        "<br> v ",NLE2()$Opp," "," ",NLE2()$R,"-",NLE2()$RA,
-                      # "<br> W-L:",toDate,
                        "<br> GB:",NLE2()$GB)) %>% 
     
     layout(hovermode = "closest", 
@@ -437,10 +436,6 @@ career <- unique(yrs$yearID) # so combines teams
 ## takes account that lahman is only up to 2015
 if(max(career)==2015) career=c(career,2016)
 
-# for use in testing of data for year is available
-x <- 0
-
-print(length(career))
 
 l <- length(career)
 
@@ -506,15 +501,11 @@ Row {.tabset .tabset-fade}
 
 output$pgl_individual <- renderPlotly({
 
-  write_csv(pgl(),"problem2.csv") #seemed to work OK
+ 
   
   df <- pgl()
   
-#   print(glimpse(df))
-#   
-#   ## issue seems to be that all values are character
-# df <-  df %>% 
-#     mutate(Gcar=as.integer(Gcar),GSc=as.integer(GSc))
+
   
  df %>% 
   plot_ly() %>% 
@@ -542,50 +533,6 @@ plotlyOutput("pgl_individual")
 ```
 
 
-
-
-```{r}
-
-
-# click_point <- eventReactive(input$pgl_individual_marker_click, {
-#   
-#   
-#   # Get subset based on selection
-#     event.data <- event_data("plotly_click", source = "gameScores")
-#     
-#      if(is.null(event.data) == T) return(NULL)
-# 
-#     print(event.data)
-# 
-#     # x <- input$map_shape_click
-#     # 
-#     # y <- x$id
-#     # 
-#     # return(y)
-# 
-#   })
-
-#table from selected gamescores
-# output$pgl_table <- DT::renderDataTable({
-# 
-#   print("enter datatable")
-# # Get subset based on selection
-#     event.data <- event_data("plotly_clicked", source = "gameScores")
-# 
-#     # If NULL dont do anything
-#     if(is.null(event.data) == T) return(NULL)
-# 
-#     print(event.data)
-# 
-#     pgl() %>%
-#      DT::datatable(class='compact stripe hover row-border order-column',rownames=FALSE,options= list(paging = FALSE, searching = FALSE,info=FALSE))
-# 
-# 
-#   })
-# 
-#  DT::dataTableOutput("pgl_table")
-
-``` 
 
 
 ### By Team
@@ -640,8 +587,7 @@ output$pgl_year <- renderPlotly({
 
 
   pgl() %>%
-    #group_by(year) %>%
-    plot_ly() %>% 
+   plot_ly() %>% 
    add_boxplot(y=~GSc,color=~as.character(year), boxpoints = "all", jitter = 0.3
           ) %>%
     layout(showlegend=FALSE,
@@ -665,7 +611,7 @@ output$pgl_month <- renderPlotly({
 
 df <- pgl()
 
-# some manipulation required - prob mot most efficient!
+# some manipulation required - prob not most efficient!
 
  df$month <- tolower(str_sub(df$Date,1,3))
          df$day <- str_sub(df$Date,5,6)
@@ -711,7 +657,7 @@ inputPanel(
 selectInput("war_Pitcher","Select or type Starter's Name",bbRef_pitchers, selected=c("kershcl01","martipe02"),multiple=T),
 actionButton("go4","Display Charts  (wait for it)")
 )
-#includeMarkdown("gameScoreProviso.md")
+
 
 ```
 
@@ -732,7 +678,6 @@ choices <- input$war_Pitcher
     
     # url <- "http://www.baseball-reference.com/players/gl.cgi?id=priceda01&t=p&year=2016"
     tables <- readHTMLTable(url, stringsAsFactors=FALSE)
-    #names(tables)
     tempdata <- tables[["pitching_value"]]
     tempdata$bbrefID <- choices[i]
     
@@ -805,7 +750,7 @@ inputPanel(
 selectInput("war_Batter","Select or type Batters' Name",bbRef_batters, selected=c("troutmi01","rodrial01"),multiple=T),
 actionButton("go5","Display Charts  (wait for it)")
 )
-#includeMarkdown("gameScoreProviso.md")
+
 
 ```
 
@@ -814,7 +759,7 @@ actionButton("go5","Display Charts  (wait for it)")
 
  batterWARdata <- eventReactive(input$go5,{
     choices <- input$war_Batter
-    # choices <- c("troutmi01","rodrial01") i <- 1
+   
     
     #withProgress(message=" ", value = 0, {
     for (i in seq_along(choices)) {
@@ -825,9 +770,9 @@ actionButton("go5","Display Charts  (wait for it)")
       
       url <- paste0("http://www.baseball-reference.com/players/",initial,"/",choices[i],".shtml")
       
-      # url <- "http://www.baseball-reference.com/players/gl.cgi?id=priceda01&t=p&year=2016"
+      
       tables <- readHTMLTable(url, stringsAsFactors=FALSE)
-      #names(tables)
+      
       tempdata <- tables[["batting_value"]]
       tempdata$bbrefID <- choices[i]
       
