@@ -30,6 +30,7 @@ library(stringr)
 library(dplyr)
 
 divRaces <- readRDS("allRes1969toDate.rds")
+print(str(divRaces))
 #divRaces <- read_feather("allRes1969toDate.feather") #issues with this. not suitable format for long term storage
 
 Master <- read_csv("data/Master.csv")
@@ -83,8 +84,10 @@ Row
 
 ```{r}
 ALE <- eventReactive(input$go,{
+ 
   final_sel <- divRaces %>% 
-    filter(league=="AL"&divison=="East"&season==input$race_yr)
+    filter(league=="AL"&divison=="East"&season==input$race_yr) 
+  
 })
 
   
@@ -438,13 +441,14 @@ if(max(career)==2015) career=c(career,2016)
 
 
 l <- length(career)
-
+print(l)
+x <- 0
 withProgress(message=" ", value = 0, {
 for (i in seq_along(career)) {
 
    print(career[i])
   incProgress(1/l, detail = paste("Season", career[i]))
-
+print("here")
   
   url <- paste0("http://www.baseball-reference.com/players/gl.cgi?id=",bbrefID,"&t=p&year=",career[i])
  
@@ -453,6 +457,7 @@ for (i in seq_along(career)) {
   tempdata <- tables[["pitching_gamelogs"]]
   
   ## when different number of columns appear can remove them
+  
     if(!is.null(tempdata)) {
    x <- x+1
   if(career[i]>=2013) {
@@ -828,5 +833,88 @@ Row
   })
   
   plotlyOutput("batterWAR")
+
+```
+
+Batter gamelogs by Year
+===================================== 
+Inputs {.sidebar}
+-------------------------------------
+
+```{r gl1}
+#includeMarkdown("WAR.md")
+
+inputPanel(
+selectInput("gl_batter","Select or type Batters' Name",bbRef_batters, selected=c("martiru01"))
+#actionButton("go6","Display Charts  (wait for it)")
+)
+
+
+```
+
+```{r gl1_yrs}
+
+output$a <-renderUI({
+  
+  print("enter a")
+  req(input$gl_batter)
+  print(input$gl_batter)
+  player <- input$gl_batter
+  initial <- str_sub(player,1,1)
+  
+u1 <- paste0("http://www.baseball-reference.com/players/",initial,"/",player,"-bat.shtml")
+print(u1)
+
+  tables <- readHTMLTable(u1, stringsAsFactors=FALSE) #names(tables)
+  print(names(tables))
+  seasons <- tables[["batting_value"]]
+
+yrs <-  seasons %>% 
+    mutate(Year=as.integer(str_sub(Year,1,4))) %>% 
+    arrange(desc(Year)) %>% 
+    .$Year 
+print(yrs)
+  numericInput("gl_year","Select Year",value=max(yrs),min=min(yrs),max=max(yrs))
+
+})
+
+uiOutput("a")
+
+```
+
+
+Row
+-----------------------------------------------------------------------
+
+
+
+```{r gl_carpentry_plot}
+
+output$gl <- renderPlotly({
+  url <- paste0("http://www.baseball-reference.com/players/gl.cgi?id=",input$gl_batter,"&t=b&year=",input$gl_year)
+  print(url)
+  tables <- readHTMLTable(url, stringsAsFactors=FALSE)
+  df <- tables[["batting_gamelogs"]]
+ 
+  ## every variable has to be named
+ colnames(df)[14] <- "double"
+ colnames(df)[15] <- "triple"
+ colnames(df)[6] <- "venue"
+  
+  
+  df %>% 
+    mutate(gameOrder=as.integer(Rk),OPS=as.numeric(OPS),H=as.integer(H),double=as.integer(double),triple=as.integer(triple),HR=as.integer(HR)) %>% 
+    mutate(TB=4*HR+3*triple+2*double+H-HR-triple-double) %>% 
+    mutate(bopper=ifelse(HR>0,"#ff0000","#fee3da")) %>% 
+    plot_ly() %>% 
+    add_lines(x=~gameOrder,y=~OPS, name='OPS',marker=list(color="ff0000", size=1)) %>% 
+    add_bars(x=~gameOrder,y=~TB/50, name='Total Bases',color=~bopper,
+             hoverinfo="text",
+             text=~paste("TB:",TB,"<br>Opp:",Opp,"<br>",Date,"<br>Game",gameOrder)) %>% 
+    layout(showlegend=FALSE)  %>% 
+    config(displayModeBar = F,showLink = F)
+})
+
+plotlyOutput("gl")
 
 ```
