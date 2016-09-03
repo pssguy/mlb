@@ -836,13 +836,13 @@ Row
 
 ```
 
-Batter gamelogs by Year
+Batter Game Logs by Year
 ===================================== 
 Inputs {.sidebar}
 -------------------------------------
 
 ```{r gl1}
-#includeMarkdown("WAR.md")
+includeMarkdown("gamelogs.md")
 
 inputPanel(
 selectInput("gl_batter","Select or type Batters' Name",bbRef_batters, selected=c("martiru01"))
@@ -855,13 +855,13 @@ selectInput("gl_batter","Select or type Batters' Name",bbRef_batters, selected=c
 ```{r gl1_yrs}
 
 output$a <-renderUI({
-  
+
   print("enter a")
   req(input$gl_batter)
   print(input$gl_batter)
   player <- input$gl_batter
   initial <- str_sub(player,1,1)
-  
+
 u1 <- paste0("http://www.baseball-reference.com/players/",initial,"/",player,"-bat.shtml")
 print(u1)
 
@@ -869,11 +869,11 @@ print(u1)
   print(names(tables))
   seasons <- tables[["batting_value"]]
 
-yrs <-  seasons %>% 
-    mutate(Year=as.integer(str_sub(Year,1,4))) %>% 
-    arrange(desc(Year)) %>% 
-    .$Year 
-print(yrs)
+yrs <-  seasons %>%
+    mutate(Year=as.integer(str_sub(Year,1,4))) %>%
+    arrange(desc(Year)) %>%
+    .$Year
+
   numericInput("gl_year","Select Year",value=max(yrs),min=min(yrs),max=max(yrs))
 
 })
@@ -895,23 +895,31 @@ output$gl <- renderPlotly({
   print(url)
   tables <- readHTMLTable(url, stringsAsFactors=FALSE)
   df <- tables[["batting_gamelogs"]]
- 
+
   ## every variable has to be named
  colnames(df)[14] <- "double"
  colnames(df)[15] <- "triple"
  colnames(df)[6] <- "venue"
+
+
+df <-  df %>%
+  filter(Rk!="Rk") %>% 
+    mutate(gameOrder=as.integer(Rk),OPS=as.numeric(OPS),H=as.integer(H),double=as.integer(double),triple=as.integer(triple),HR=as.integer(HR)) %>%
+    mutate(TB=4*HR+3*triple+2*double+H-HR-triple-double) %>%
+    mutate(bopper=ifelse(HR>0,"#ff0000","#fee3da"))
   
+  write_csv(df,"problem.csv")
   
-  df %>% 
-    mutate(gameOrder=as.integer(Rk),OPS=as.numeric(OPS),H=as.integer(H),double=as.integer(double),triple=as.integer(triple),HR=as.integer(HR)) %>% 
-    mutate(TB=4*HR+3*triple+2*double+H-HR-triple-double) %>% 
-    mutate(bopper=ifelse(HR>0,"#ff0000","#fee3da")) %>% 
-    plot_ly() %>% 
-    add_lines(x=~gameOrder,y=~OPS, name='OPS',marker=list(color="ff0000", size=1)) %>% 
+  df %>%
+    plot_ly() %>%
+    add_lines(x=~gameOrder,y=~OPS, name='OPS',marker=list(color="ff0000", size=1)) %>%
     add_bars(x=~gameOrder,y=~TB/50, name='Total Bases',color=~bopper,
              hoverinfo="text",
-             text=~paste("TB:",TB,"<br>Opp:",Opp,"<br>",Date,"<br>Game",gameOrder)) %>% 
-    layout(showlegend=FALSE)  %>% 
+             text=~paste("TB:",TB,"<br>Opp:",Opp,"<br>",Date,"<br>Game",gameOrder)) %>%
+    layout(showlegend=FALSE,
+           title="Cumulative OPS and game Total Bases - Games with Home Runs highlighted",
+           xaxis=list(title="Appearance"),
+           yaxis=list(title="Cumulative OPS"))  %>%
     config(displayModeBar = F,showLink = F)
 })
 
